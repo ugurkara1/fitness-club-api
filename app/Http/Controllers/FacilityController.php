@@ -33,13 +33,18 @@ class FacilityController extends Controller
             ];
         });
 
-        return response()->json($facilities, 200);
+        return response()->json([
+            'messages'=>__('messages.facilities_retrieved')
+            ,$facilities
+        ], 200);
     }
 
 
     public function createFacility(Request $request){
         if(!Auth::check()||Auth::user()->role_id!==1){
-            return response()->json(['message'=> 'Yetkisiz işlem.Tesis eklemesini sadece adminler yapabilir'], 403);
+            return response()->json([
+                'message' => __('messages.unauthorized')
+            ], 403);
         }
         // Gelen verilerin doğrulanması
         $validator = Validator::make($request->all(), [
@@ -69,15 +74,18 @@ class FacilityController extends Controller
             Log::info('Sports attached successfully.');
         } catch (\Exception $e) {
             Log::error('Error attaching sports: ', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Error attaching sports', 'details' => $e->getMessage()], 500);
+            return response()->json(['error' => __('messages.sports_attach_failed'), 'details' => $e->getMessage()], 500);
         }
         $functionName=__FUNCTION__;
         activity()
             ->causedBy(Auth::user())
             ->performedOn($facility)
             ->withProperties(['attributes'=>$validated ])
-            ->log("Fonksiyon adı: $functionName.Tesis ekleme işlemi yapıldı. ({$facility->name})");
-        return response()->json(['message' => 'Tesis eklendi', 'facility' => $facility->load('sports')], 201);
+            ->log("Function name: $functionName. Facility added. ({$facility->name})");
+        return response()->json([
+            'message' => __('messages.facility_created'),
+            'facility' => $facility->load('sports')
+        ], 201);
     }
     public function updateFacility(Request $request,$id){
         Log::info('Update metodu çağırıldı');
@@ -90,7 +98,7 @@ class FacilityController extends Controller
         Log::info('Doğrulanmış veriler', $validated);
         $facility=Facility::where('id',$id)->first();
         if(!$facility){
-            return response()->json(['message'=> 'Paket bulunamadı'], 404);
+            return response()->json(['message' => __('messages.facility_not_found')], 404);
         }
         // Tesisin temel bilgilerinin güncellenmesi
         $facility->name = $validated['name'];
@@ -104,7 +112,7 @@ class FacilityController extends Controller
         } catch (\Exception $e) {
             Log::error('Spor dalları güncellenirken hata oluştu', ['error' => $e->getMessage()]);
             return response()->json([
-                'error'   => 'Spor dalları güncellenirken hata oluştu',
+                'error' => __('messages.sports_update_failed'),
                 'details' => $e->getMessage()
             ], 500);
         }
@@ -121,11 +129,11 @@ class FacilityController extends Controller
             ->causedBy(Auth::user())
             ->performedOn($facility)
             ->withProperties(["attributes"=> $facilityData])
-            ->log("Fonksiyon adı: $functionName.Tesis güncellendi.({$facility->name})");
+            ->log("Function name: $functionName. Facility updated. ({$facility->name})");
         return response()->json([
-            'message'=> 'Tesis güncellendi',
-            'facility'=> $facility
-        ],200);
+            'message' => __('messages.facility_updated'),
+            'facility' => $facility
+        ], 200);
 
     }
 

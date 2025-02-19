@@ -16,7 +16,7 @@ class TrainerController extends Controller
     //eğitmen ekleme
     public function createTrainer(Request $request){
         if(!Auth::check()||Auth::user()->role_id!==1){
-            return response()->json(['message'=> 'Yetkisiz işlem.Trainer eklemeyi sadece adminler yapabilir'], 403);
+            return response()->json(['message' => __('messages.unauthorized')], 403);
         }
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -29,7 +29,10 @@ class TrainerController extends Controller
         if ($validator->fails()) {
             // Burada validasyon hatalarını loglamak faydalı olabilir
             Log::error('Validation failed: ' . json_encode($validator->errors()));
-            return response()->json($validator->errors(), 400);
+            return response()->json([
+                'message' => __('messages.operation_failed'),
+                'errors' => $validator->errors(),
+            ], 400);
         }
         $validated=$validator->validated();
 
@@ -47,9 +50,11 @@ class TrainerController extends Controller
             ->causedBy(Auth::user())
             ->performedOn($trainers)
             ->withProperties(['attributes'=>$validated])
-            ->log("Fonksiyon adı: $functionName Eğitmen ekleme başarılı.");
-        return response()->json(['message'=> 'Trainer başarıyla eklendi','trainers'=> $trainers],201);
-    }
+            ->log("Function name: $functionName Trainer created successfully.");
+        return response()->json([
+            'message' => __('messages.trainer_created'),
+            'trainers' => $trainers
+        ], 201);    }
     //trainer listletme
     public function getTrainer(){
         $trainers=Trainers::all();
@@ -58,12 +63,12 @@ class TrainerController extends Controller
     //trainer silme
     public function deleteTrainer($id){
         if(!Auth::check()||Auth::user()->role_id!==1){
-            return response()->json(['message'=> 'Yetkisiz işlem.Trainer silmeyi sadece adminler yapabilir'], 403);
+            return response()->json(['message' => __('messages.unauthorized')], 403);
         }
 
         $trainer=Trainers::where('id',$id)->first();
         if(!$trainer){
-            return response()->json(['message'=> 'Trainer bulunamadı'],404);
+            return response()->json(['message' => __('messages.trainer_not_found')], 404);
 
         }
         $trainersData=[
@@ -76,9 +81,9 @@ class TrainerController extends Controller
             ->causedBy(Auth::user())
             ->performedOn($trainer)
             ->withProperties(['attributes'=>$trainersData])
-            ->log("Fonksiyon adı: $functionName.Eğitmen silme işlemi başarıyla gerçekleştirildi.");
+            ->log("Function Name: $functionName.Trainer deleted successfully.");
         $trainer->delete();
-        return response()->json(['message'=> 'Trainer başarıyla silindi'],200);
+        return response()->json(['message' => __('messages.trainer_deleted')], 200);
 
 
     }
@@ -114,7 +119,7 @@ class TrainerController extends Controller
         ])
         ->get();
         if($trainers->isEmpty()){
-            return response()->json(['message'=> 'Hiçbir eğitmen bulunamadı'],404);
+            return response()->json(['message' => __('messages.no_trainer_found')], 404);
         }
         return response()->json($trainers,200);
     }

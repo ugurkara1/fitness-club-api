@@ -13,7 +13,7 @@ class SportController extends Controller
     //Sports tablosuna ekleme
     public function createSport(Request $request){
         if (!Auth::check() || Auth::user()->role_id !== 1) {
-            return response()->json(['message' => 'Yetkisiz işlem. Sadece adminler spor dalı ekleyebilir.'], 403);
+            return response()->json(['message' => __('messages.unauthorized')], 403);
         }
         $validator=Validator::make($request->all(), [
             'name'=>'required|string|max:255',
@@ -21,7 +21,10 @@ class SportController extends Controller
         ]);
         //validasyon hataları varsa buraya dön
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);//eksik veya hatalı parametre
+            return response()->json([
+                'message' => __('messages.validation_error'),
+                'errors' => $validator->errors(),
+            ], 400); // Eksik veya hatalı parametre
         }
         $validated=$validator->validated();
         //Yeni spor dalı ekliyoruz
@@ -36,8 +39,10 @@ class SportController extends Controller
             ->performedOn($sport)
             ->withProperties(['attributes'=>$validated])
             ->log("Fonksiyon Adı: $functionName.Spor dalı ekleme yapıldı.");
-        return response()->json(['message'=> 'Spor dalı başarıyla eklendi','sport'=> $sport],201);
-    }
+        return response()->json([
+            'message' => __('messages.sport_created'),
+            'sport' => $sport
+        ], 201);    }
     //spor dallarını listele
     public function getSports(){
         $sports=Sports::all();
@@ -46,12 +51,12 @@ class SportController extends Controller
     //spor dalını sil
     public function deleteSport($id){
         if(!Auth::check()||Auth::user()->role_id!==1){
-            return response()->json(['message'=> 'Yetkisiz işlem.Spor dalı silmeyi sadece adminler yapabilir'], 403);
+            return response()->json(['message' => __('messages.unauthorized')], 403);
         }
         $sport=Sports::where('id', $id)->first();
 
         if(!$sport){
-            return response()->json(['message'=> 'Belirtilen spor dalı bulunamadı'],404);
+            return response()->json(['message' => __('messages.sport_not_found')], 404);
         }
         $sportsData=[
             'id'=>$sport->id,
@@ -64,7 +69,7 @@ class SportController extends Controller
             ->withProperties(['attributes'=>$sportsData])
             ->log("Fonksiyon adı: deleteUser - Kullanıcı ({$sport->name}) silindi");
         $sport->delete();
-        return response()->json(['message'=> 'Belirtilen spor dalı başarıyla silindi'],200);
+        return response()->json(['message' => __('messages.sport_deleted')], 200);
     }
 
 }

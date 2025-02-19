@@ -37,16 +37,16 @@ class AppointmentController extends Controller
             $sport = Sports::find($validated["sports_id"]);
 
             if (!$trainer) {
-                Log::warning("Eğitmen bulunamadı. Eğitmen ID: {$validated['trainer_id']}");
+                Log::warning("Trainer not found. Trainer ID: {$validated['trainer_id']}");
                 return response()->json([
-                    'message' => 'Eğitmen bulunamadı',
+                    'message' => __('messages.trainer_not_found'),
                 ], 404);
             }
 
             if (!$sport) {
-                Log::warning("Spor dalı bulunamadı. Spor Dalı ID: {$validated['sports_id']}");
+                Log::warning("Sport not found. Sport ID: {$validated['sports_id']}");
                 return response()->json([
-                    'message' => 'Spor dalı bulunamadı',
+                    'message' => __('messages.sport_not_found'),
                 ], 404);
             }
 
@@ -60,7 +60,7 @@ class AppointmentController extends Controller
             if ($existingAppointment) {
                 Log::warning("Randevu dolu. Eğitmen ID: {$trainer->id}, Spor Dalı ID: {$sport->id}, Zaman: {$validated['appointments_time']}");
                 return response()->json([
-                    'message' => 'Bu saatte randevu dolu, lütfen başka bir zaman dilimi seçiniz.',
+                    'message' => __('messages.appointment_slot_booked'),
                 ], 400);
             }
 
@@ -84,26 +84,28 @@ class AppointmentController extends Controller
                     'appointment_time'=>$validated['appointments_time']
 
                 ])
-                ->log("Fonksiyon Adı:$functionName Randevu oluşturma işlemi başarılı.Randevu ID:{$appointment->id} kullanıcı tarafından oluşturuldu");
-
+                ->log("Function Name: $functionName, appointment creation successful. Appointment ID: {$appointment->id} created by user");
             // E-posta gönderimi
             try {
                 // AppointmentCreated sınıfına doğru parametreleri gönder
                 Mail::to($trainer->email)->send(new AppointmentCreated($appointment, $user));
                 Log::info("E-posta gönderildi. Eğitmen E-posta: {$trainer->email}");
+                $emailMessage = __('messages.email_sent');
             } catch (\Exception $e) {
                 Log::error("E-posta gönderimi sırasında hata: " . $e->getMessage());
+                $emailMessage = __('messages.email_failed');
             }
 
             return response()->json([
-                'message' => "Randevu başarıyla oluşturuldu",
-                "appointment" => $appointment,
+                'message' => __('messages.appointment_created'),
+                'email_message' => $emailMessage,
+                'appointment' => $appointment,
             ]);
 
         } catch (\Exception $e) {
             Log::error("Randevu oluşturma sırasında hata oluştu: " . $e->getMessage());
             return response()->json([
-                'message' => 'Randevu oluşturulurken bir hata oluştu',
+                'message' => __('messages.appointment_creation_failed'),
                 'error' => $e->getMessage()
             ], 500);
         }

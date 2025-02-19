@@ -29,7 +29,7 @@ class PackageController extends Controller
     */
         $packages=Package::with("sports","facilities","trainers")->get();
         return response()->json([
-            'message'=>'Paketler başarıyla getirildi',
+            'message'  => __('messages.packages_retrieved'),
             'packages'=>$packages
         ],200);
     }
@@ -38,8 +38,9 @@ class PackageController extends Controller
     public function store(Request $request)
     {
         if(!Auth::check()||Auth::user()->role_id!==1){
-            return response()->json(['message'=>'Yetkisiz erişim.Paket eklemeyi sadece admin yapabilir.'],403);
-        }
+            return response()->json([
+                'message' => __('messages.unauthorized')
+            ], 403);        }
         // Gelen verilerin doğrulanması
         Log::info('store metodu çağrıldı');
 
@@ -87,11 +88,11 @@ class PackageController extends Controller
             ->causedBy(Auth::user())
             ->performedOn($package)
             ->withProperties(['attributes'=>$validated])
-            ->log("Fonksyion adı: $functionName Yeni paket oluşturuldu.");
+            ->log("Function name: $functionName. New package created.");
 
         // İlişkiler yüklendikten sonra response döndürme
         return response()->json([
-            'message' => 'Paket başarıyla oluşturuldu.',
+            'message' => __('messages.package_created'),
             'package' => $package->load('sports', 'facilities', 'trainers')
         ], 201);
     }
@@ -100,8 +101,8 @@ class PackageController extends Controller
         $package=Package::where('id', $id)->first();
         if(!$package){
             return response()->json([
-                'message'=>'Belirtilen tipe ait paket bulunamadı',
-            ] ,404);
+                'message' => __('messages.package_not_found')
+            ], 404);
         }
         //ilişkili verileri silmeden ara tabloları kaldırıyoruz
         $package->sports()->detach();
@@ -121,11 +122,11 @@ class PackageController extends Controller
                 'package_type' => $package->type,
                 'deleted_by' => Auth::user()->id,  // Silen kullanıcı ID'si
             ])
-            ->log("Fonksiyon adı: $functionName Paket silindi.");
+            ->log("Function name: $functionName. Package deleted.");
 
-        return response()->json([
-            'message'=> 'Paket başarıyla silindi',
-        ] ,200);
+            return response()->json([
+                'message' => __('messages.package_deleted')
+            ], 200);
     }
     //paket güncelleme
     public function updatePackage(Request $request, $id){
@@ -143,8 +144,8 @@ class PackageController extends Controller
         $package=Package::where('id', $id)->first();
         if(!$package){
             return response()->json([
-                'message'=>'Paket bulunamadı',
-            ] ,404);
+                'message' => __('messages.package_not_found')
+            ], 404);
         }
         $package->save();
         Log::info('Package güncellendi',['package'=>$package]);
@@ -176,10 +177,10 @@ class PackageController extends Controller
             ->causedBy(Auth::user())
             ->performedOn($package)
             ->withProperties(['attributes'=>$validated])
-            ->log("Fonksiyon adı: $functionName Paket silme işlemi başarılı.");
+            ->log("Function name: $functionName. Package update operation successful.");
         return response()->json([
-            'message'=> 'Paket başarıyla güncellendi',
-            'package'=>$package->load('sports','facilities','trainers')
-        ] ,200);
+            'message' => __('messages.package_updated'),
+            'package' => $package->load('sports', 'facilities', 'trainers')
+        ], 200);
     }
 }

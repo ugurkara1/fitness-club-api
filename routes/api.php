@@ -10,12 +10,19 @@ use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\TrainerController;
+use Illuminate\Support\Facades\App;
 
 // V1 API Versioning
 Route::prefix('v1')->group(function () {
+
     // login ve register
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'getUser']);
+    Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+
+
 
     // Admin route'lar
     Route::middleware('auth:sanctum')->prefix('admin')->group(function() {
@@ -30,6 +37,7 @@ Route::prefix('v1')->group(function () {
         //user search
         Route::get('users/search',[AdminController::class,'searchUser']);
         //sport add
+
         Route::post('sports', [SportController::class,'createSport']);
         //sport list
         Route::get('sports',[SportController::class,'getSports']);
@@ -77,4 +85,6 @@ Route::prefix('v1')->group(function () {
     Route::get('packages', [PackageController::class, 'index']);
     //trainer search
     Route::get('trainers/search', [TrainerController::class, 'searchTrainer']);
+
 });
+

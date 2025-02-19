@@ -10,7 +10,7 @@ use App\Models\Package;
 
 class CustomerController extends Controller
 {
-    //kullanıcı profili göster
+    // Kullanıcı profili göster
     public function showProfile(Request $request)
     {
         $user = Auth::user();
@@ -19,13 +19,14 @@ class CustomerController extends Controller
 
         // Eğer customer kaydı yoksa hata mesajı döndürüyoruz
         if (!$customer) {
-            return response()->json(['message' => 'Müşteri bulunamadı'], 404);
+            return response()->json(['message' => __('messages.customer_not_found')], 404);
         }
 
         // customer bilgilerini döndürüyoruz
         return response()->json(['customer' => $customer]);
     }
-    //Kullanıcıya ait customer bilgilerini ekler
+
+    // Kullanıcıya ait customer bilgilerini ekler
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -56,13 +57,13 @@ class CustomerController extends Controller
         $functionName = __FUNCTION__;
 
         activity()
-            ->causedBy($user) //hangi kullanıcı tarafından yapıldığını belirtiyoruz
-            ->performedOn($customer)//hangi model üzerinde işlem yapıldığını belirtiyoruz
-            ->withProperties(['attributes'=>$validated])//yapılan işlemlerin verilerini ekleyebilirsiniz
-            ->log("Fonksiyon adı: $functionName - müşteri bilgileri başarıyla kaydedildi");
-            return response()->json(['message' => 'Müşteri bilgileri başarıyla kaydedildi'], 201);
-    }
+            ->causedBy($user) // Hangi kullanıcı tarafından yapıldığını belirtiyoruz
+            ->performedOn($customer) // Hangi model üzerinde işlem yapıldığını belirtiyoruz
+            ->withProperties(['attributes' => $validated]) // Yapılan işlemlerin verilerini ekleyebilirsiniz
+            ->log("Function name: $functionName - Customer information saved successfully");
 
+        return response()->json(['message' => __('messages.customer_info_saved')], 201);
+    }
 
     public function updateProfile(Request $request)
     {
@@ -74,7 +75,7 @@ class CustomerController extends Controller
         // Eğer customer kaydı yoksa, 404 döndürelim
         if (!$customer) {
             return response()->json([
-                'message' => 'Customer not found'
+                'message' => __('messages.customer_not_found')
             ], 404);
         }
 
@@ -88,18 +89,20 @@ class CustomerController extends Controller
         // customer bilgilerini güncelliyoruz
         $customer->update($validated);
         $functionName = __FUNCTION__;
-    activity()
-        ->causedBy($user)  // Hangi kullanıcı tarafından yapıldığını belirtiyoruz
-        ->performedOn($customer)  // Hangi model üzerinde işlem yapıldığını belirtiyoruz
-        ->withProperties(['attributes' => $validated])  // Yapılan işlemin verilerini ekleyebilirsiniz
-        ->log("Fonksiyon adı: $functionName -Müşteri bilgileri güncellendi");  // Log mesajı
+
+        activity()
+            ->causedBy($user)  // Hangi kullanıcı tarafından yapıldığını belirtiyoruz
+            ->performedOn($customer)  // Hangi model üzerinde işlem yapıldığını belirtiyoruz
+            ->withProperties(['attributes' => $validated])  // Yapılan işlemin verilerini ekleyebilirsiniz
+            ->log("Function name: $functionName - Customer information updated");
 
         return response()->json([
+            'message' => __('messages.customer_info_updated'),
             'customer' => $customer
         ]);
     }
 
-    //müşteri paket(abonelik) alıyor
+    // Müşteri paket (abonelik) alıyor
     public function addPackage(Request $request)
     {
         $user = Auth::user();
@@ -111,7 +114,7 @@ class CustomerController extends Controller
         if (!$customer) {
             Log::warning("Müşteri bulunamadı. Kullanıcı ID: {$user->id}");
             return response()->json([
-                'message' => 'Müşteri bulunamadı',
+                'message' => __('messages.customer_not_found'),
             ], 404);
         }
 
@@ -127,7 +130,7 @@ class CustomerController extends Controller
         if (!$package) {
             Log::warning("Paket bulunamadı. Paket ID: {$validated['package_id']}");
             return response()->json([
-                'message' => 'Paket bulunamadı',
+                'message' => __('messages.package_not_found'),
             ], 404);
         }
 
@@ -135,7 +138,7 @@ class CustomerController extends Controller
         if ($customer->packages->contains($package)) {
             Log::info("Müşteri bu paketi zaten almış. Kullanıcı ID: {$user->id}, Paket ID: {$package->id}");
             return response()->json([
-                'message' => 'Bu paket zaten alındı',
+                'message' => __('messages.package_already_purchased'),
             ], 400);
         }
 
@@ -144,13 +147,16 @@ class CustomerController extends Controller
 
         // Log: Paket başarıyla alındı
         Log::info("Müşteri başarıyla paket aldı. Kullanıcı ID: {$user->id}, Paket ID: {$package->id}");
-        $functionName= __FUNCTION__;
-        activity()
-            ->causedBy($user) ->performedOn($customer)->withProperties(["package_id"=> $package->id]) ->log(" Fonksiyon adı: $functionName Paket başarıyla alındı");
+        $functionName = __FUNCTION__;
 
+        activity()
+            ->causedBy($user)
+            ->performedOn($customer)
+            ->withProperties(["package_id" => $package->id])
+            ->log("Function name: $functionName - Package purchased successfully");
 
         return response()->json([
-            'message' => 'Paket başarıyla alındı',
+            'message' => __('messages.package_purchased_successfully'),
             'package' => $package,
         ], 200);
     }
