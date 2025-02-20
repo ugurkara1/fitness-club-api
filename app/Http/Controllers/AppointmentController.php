@@ -125,7 +125,7 @@ class AppointmentController extends Controller
             } else {
                 // Kimlik doğrulama yapılmamışsa, tüm randevuları listele
                 $appointments = Appointment::with(['trainer', 'sports'])->get();
-                $locale = app()->getLocale();
+                $locale = $request->header('Accept-Language', app()->getLocale());
             }
 
             // Eğer randevu bulunmazsa, uygun mesaj döndürelim

@@ -10,6 +10,7 @@ use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\TrainerController;
+use App\Http\Controllers\RecipeController;
 use Illuminate\Support\Facades\App;
 
 // V1 API Versioning
@@ -96,3 +97,7 @@ Route::prefix('v1')->group(function () {
     Route::get('trainers/search', [TrainerController::class, 'searchTrainer']);
 
 });
+Route::get('search-recipes', [RecipeController::class, 'searchRecipes']);
+Route::get('list-recipes', [RecipeController::class, 'listRecipes']);
+Route::get('recipe/{id}', [RecipeController::class, 'getRecipeDetails']);
+Route::get('/meal-plan/{weight}', [RecipeController::class, 'getMealPlanByWeight']);

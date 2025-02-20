@@ -46,7 +46,7 @@ class PackageController extends Controller
 
             }else{
                 $packages=Package::with(['sports','trainers','facilities'])->get();
-                $locale=app()->getLocale();
+                $locale = $request->header('Accept-Language', app()->getLocale());
             }
             //eğer paket bulunmuyorsa
             if($packages->isEmpty()){

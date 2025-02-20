@@ -64,7 +64,7 @@ class SportController extends Controller
         }
 
         // İstekten dil parametresini alıyoruz
-        $locale = $request->query('lang');
+        $locale = $request->header('Accept-Language', app()->getLocale());
 
         if (!$locale || $locale === 'tr') {
             // Dil belirtilmemiş ya da Türkçe isteniyorsa orijinal verileri kullanıyoruz.
@@ -167,7 +167,7 @@ class SportController extends Controller
 
     public function getSports(Request $request)
     {
-        $locale = $request->query('lang', app()->getLocale());
+        $locale = $request->header('Accept-Language', app()->getLocale());
 
         // Eğer istenen dil Türkçe ise orijinal sports tablosundan çekiyoruz
         if ($locale === 'tr') {

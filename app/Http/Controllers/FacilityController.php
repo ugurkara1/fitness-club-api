@@ -41,7 +41,7 @@ class FacilityController extends Controller
     public function getFacilities(Request $request)
     {
         // İstenen dilin alınması, varsayılan dil olarak mevcut dil alınır
-        $locale = $request->query('lang', app()->getLocale());
+        $locale = $request->header('Accept-Language', app()->getLocale());
 
         // Eğer istenen dil Türkçe ise orijinal facilities tablosundan çekiyoruz
         if ($locale === 'tr') {

@@ -71,7 +71,7 @@ class TrainerController extends Controller
             return response()->json(['message' => __('messages.trainer_not_found')], 404);
 
         }
-        $locale = $request->query('lang');
+        $locale = $request->header('Accept-Language', app()->getLocale());
 
         if (!$locale || $locale === 'tr') {
             // Dil belirtilmemiş ya da Türkçe isteniyorsa orijinal verileri kullanıyoruz.
@@ -136,7 +136,7 @@ class TrainerController extends Controller
             Log::info('searchTrainer fonksiyonu çalıştırıldı.');
 
             // Geçerli dilin alınması
-            $locale = app()->getLocale();  // Bu satır mevcut dil ayarını alır
+            $locale = $request->header('Accept-Language', app()->getLocale());
 
             // Spatie QueryBuilder kullanarak eğitmenleri filtreliyoruz
             $trainers = QueryBuilder::for(Trainers::class)
@@ -240,12 +240,12 @@ class TrainerController extends Controller
         }
     }
 
-    public function getTrainer(){
+    public function getTrainer(Request $request){
         try {
             Log::info('getTrainer fonksiyonu çalıştırıldı.');
 
             $trainers = Trainers::with(['sports'])->get();
-            $locale = app()->getLocale();
+            $locale = $request->header('Accept-Language', app()->getLocale());
 
             $trainers = $trainers->map(function ($trainer) use ($locale) {
                 return [
