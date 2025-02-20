@@ -111,5 +111,123 @@ class AppointmentController extends Controller
         }
     }
 
+    public function getAppointments(Request $request)
+    {
+        try {
+            Log::info('getAppointments fonksiyonu çalıştırıldı.');
+
+            // Eğer kullanıcı kimlik doğrulaması yapılmışsa, sadece kullanıcıya ait randevuları getirelim
+            $user = Auth::user();
+            if ($user) {
+                $appointments = Appointment::with(['trainer', 'sports'])  // Trainer ve Sports ilişkilerini dahil et
+                    ->where('user_id', $user->id)  // Kullanıcıya ait randevuları filtreleyelim
+                    ->get();
+            } else {
+                // Kimlik doğrulama yapılmamışsa, tüm randevuları listele
+                $appointments = Appointment::with(['trainer', 'sports'])->get();
+                $locale = app()->getLocale();
+            }
+
+            // Eğer randevu bulunmazsa, uygun mesaj döndürelim
+            if ($appointments->isEmpty()) {
+                return response()->json([
+                    'message' => __('messages.no_appointments_found'),
+                ], 404);
+            }
+
+            // Randevuların her birini formatlıyoruz
+            $appointments = $appointments->map(function ($appointment) use ($locale) {
+                return [
+                    'id' => $appointment->id,
+                    'appointments_time' => $appointment->appointments_time,
+                    'created_at' => $appointment->created_at,
+                    'updated_at' => $appointment->updated_at,
+                    'trainer' => $appointment->trainer ? [
+                        'id' => $appointment->trainer->id,
+                        'name' => $appointment->trainer->getTranslatedName($locale),
+                        'description' => $appointment->trainer->getTranslatedDescription($locale),
+                        'email' => $appointment->trainer->email,
+                        'sport' => $appointment->trainer->sports ? [
+                            'id' => $appointment->trainer->sports->id,
+                            'name' => $appointment->trainer->sports->getTranslatedName($locale),
+                            'description' => $appointment->trainer->sports->getTranslatedDescription($locale),
+                        ] : null,
+                    ] : null,
+                    'sport' => $appointment->sports ? [
+                        'id' => $appointment->sports->id,
+                        'name' => $appointment->sports->getTranslatedName($locale),
+                        'description' => $appointment->sports->getTranslatedDescription($locale),
+                    ] : null,
+                ];
+            });
+
+            // Randevuların formatlanmış listesini döndürüyoruz
+            return response()->json([
+                'appointments' => $appointments,
+            ], 200);
+
+        } catch (\Exception $e) {
+            // Hata durumunda loglanır ve hata mesajı döndürülür
+            Log::error("getAppointments fonksiyonunda hata oluştu: " . $e->getMessage());
+            return response()->json([
+                'message' => __('messages.appointment_fetch_failed'),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    public function deleteAppointment(Request $request, $id)
+    {
+        try {
+            Log::info('deleteAppointment fonksiyonu çalıştırıldı.');
+
+            // İlgili randevuyu alıyoruz
+            $appointment = Appointment::with(['trainer', 'sports'])->where('id', $id)->first();
+            if (!$appointment) {
+                return response()->json([
+                    'message' => __('messages.appointment_not_found')
+                ], 404);
+            }
+
+            // Dil parametresini alıyoruz
+            $locale = $request->query('lang', app()->getLocale());
+
+            // Log için randevu bilgilerini dil desteğine göre hazırlıyoruz
+            $logData = [
+                'appointment_id'   => $appointment->id,
+                'appointments_time'=> $appointment->appointments_time,
+                'trainer'          => $appointment->trainer
+                                    ? $appointment->trainer->getTranslatedName($locale)
+                                    : null,
+                'sport'            => $appointment->sports
+                                    ? $appointment->sports->getTranslatedName($locale)
+                                    : null,
+            ];
+
+            // Randevu silmeden önce ilişkileri temizleyebiliriz (varsa)
+            // Örneğin, pivot ilişkiler varsa detach edilebilir. Bu örnekte basitçe randevu siliniyor.
+
+            $appointment->delete();
+
+            // Activity log kaydı oluşturma
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($appointment)
+                ->withProperties($logData)
+                ->log("Appointment deleted successfully.");
+
+            return response()->json([
+                'message' => __('messages.appointment_deleted')
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error("deleteAppointment fonksiyonunda hata oluştu: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'message' => __('messages.appointment_delete_failed'),
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 
 }

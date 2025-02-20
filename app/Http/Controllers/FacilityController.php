@@ -11,10 +11,9 @@ use App\Models\Facility;
 class FacilityController extends Controller
 {
     //
-    /*public function getFacilities(){
-        $Facilities=Facility::all();
-        return response()->json($Facilities,200);
-    }*/
+
+    /*
+    //facility list
     public function getFacilities(){
         $facilities = Facility::with('sports')->get();
 
@@ -36,6 +35,60 @@ class FacilityController extends Controller
         return response()->json([
             'messages'=>__('messages.facilities_retrieved')
             ,$facilities
+        ], 200);
+    }
+    */
+    public function getFacilities(Request $request)
+    {
+        // İstenen dilin alınması, varsayılan dil olarak mevcut dil alınır
+        $locale = $request->query('lang', app()->getLocale());
+
+        // Eğer istenen dil Türkçe ise orijinal facilities tablosundan çekiyoruz
+        if ($locale === 'tr') {
+            $facilities = Facility::with('sports')->get();
+            $result = $facilities->map(function($facility) {
+                return [
+                    'id'          => $facility->id,
+                    'name'        => $facility->name,
+                    'description' => $facility->description,
+                    'sports'      => $facility->sports->map(function($sport) {
+                        return [
+                            'id'   => $sport->id,
+                            'name' => $sport->name
+                        ];
+                    })
+                ];
+            });
+        } else {
+            // Diğer diller için translations tablosundan veriyi çekiyoruz
+            $facilities = Facility::with(['translations' => function($query) use ($locale) {
+                $query->where('locale', $locale);
+            }, 'sports.translations' => function($query) use ($locale) {
+                $query->where('locale', $locale);
+            }])->get();
+
+            $result = $facilities->map(function($facility) use ($locale) {
+                // Facility çevirisi
+                $facilityTranslation = $facility->translations->first();
+
+                return [
+                    'id'          => $facility->id,
+                    'name'        => $facilityTranslation ? $facilityTranslation->name : $facility->name,
+                    'description' => $facilityTranslation ? $facilityTranslation->description : $facility->description,
+                    'sports'      => $facility->sports->map(function($sport) use ($locale) {
+                        $sportTranslation = $sport->translations->first();
+                        return [
+                            'id'          => $sport->id,
+                            'name'        => $sportTranslation ? $sportTranslation->name : $sport->name
+                        ];
+                    })
+                ];
+            });
+        }
+
+        return response()->json([
+            'messages' => __('messages.facilities_retrieved'),
+            'facilities' => $result
         ], 200);
     }
 
@@ -136,5 +189,54 @@ class FacilityController extends Controller
         ], 200);
 
     }
+    public function addEnglishTranslation(Request $request,$id){
+        if(!Auth::check() || Auth::user()->role_id!=1){
+            return response()->json([
+                'message'=>__('messages.unauthorized'),
+            ],403);
+        }
+        $validator=Validator::make($request->all(), [
+            'name'=>'required|string|max:255',
+            'description'=>'nullable|string',
+        ]);
+        if($validator->fails()){
+            Log::error("Validation error while adding translation for trainer ID {$id}",[
+                'errors'=>$validator->errors(),
+                'request'=>$request->all(),
+            ]);
+            return response()->json([
+                'message'=>__('messages.validation_error'),
+            ] ,400);
+        }
+        //ilgili facility buluyoruz
+        $facility=Facility::where('id',$id)->first();
+        if(!$facility){
+            Log::error("Facility not found for ID:{$id}");
+            return response()->json(["message"=>'messages.facility_not_found'],400);
+        }
+        try{
+            $translation=$facility->translations()->updateOrCreate(
+                ['locale'=>'en'],
+                [
+                    'name'=>$request->name,
+                    'description'=>$request->description ?? null,
+                ]
+            );
+            Log::info("Translation added/updated successfully for sport ID: {$id}", [
+                'translation' => $translation
+            ]);
+            return response()->json([
+                'message' => __('messages.translation_updated'),
+                'translation' => $translation,
+            ], 200);
+        }catch (\Exception $e) {
+            Log::error("Error occurred while updating translation for trainer ID: {$id}", [
+                'exception' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['message' => 'An error occurred while updating the translation.'], 500);
+        }
+    }
+
 
 }

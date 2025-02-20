@@ -13,6 +13,10 @@ return [
     'sport_not_found' => 'Sport not found.',
     'appointment_slot_booked' => 'The appointment slot is already booked, please select another time slot.',
     'appointment_created' => 'Appointment successfully created.',
+    'no_appointments_found'       => 'No appointments found.',
+    'appointment_fetch_failed'    => 'Failed to fetch appointments.',
+    'appointment_deleted'         => 'Appointment deleted successfully.',
+    'appointment_delete_failed'   => 'Failed to delete appointment.',
     'email_sent' => 'Email sent successfully.',
     'email_failed' => 'Failed to send email.',
     'appointment_creation_failed' => 'An error occurred while creating the appointment.',
@@ -36,6 +40,8 @@ return [
     'customer_details_retrieved' => 'Customer details retrieved successfully.',
     'facility_created' => 'Facility created successfully.',
     'facility_updated' => 'Facility updated successfully.',
+    'facility_deleted'      => 'Facility deleted successfully.',
+
     'facility_not_found' => 'Facility not found.',
     'sports_attached' => 'Sports attached successfully.',
     'sports_attach_failed' => 'Error attaching sports.',
@@ -51,5 +57,8 @@ return [
     'trainer_created' => 'Trainer created successfully.',
     'trainer_deleted' => 'Trainer deleted successfully.',
     'no_trainer_found' => 'No trainer found.',
+    'translation_updated' => 'Translation successfully updated.',
+    'server_error' => 'A server error occurred. Please try again later.',
+
 
 ];

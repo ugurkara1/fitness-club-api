@@ -41,6 +41,9 @@ Route::prefix('v1')->group(function () {
         Route::post('sports', [SportController::class,'createSport']);
         //sport list
         Route::get('sports',[SportController::class,'getSports']);
+        Route::put('/sports/{id}/translation/en', [SportController::class, 'addEnglishTranslation']);
+        Route::put('/trainer/{id}/translation/en', [TrainerController::class, 'addEnglishTranslation']);
+
         //sport delete
         Route::delete('sports/{id}', [SportController::class,'deleteSport']);
 
@@ -58,12 +61,15 @@ Route::prefix('v1')->group(function () {
         //facility update
         Route::put('facility/{id}', [FacilityController::class,'updateFacility']);
 
+        Route::put('facility/{id}/translation/en', [FacilityController::class,'addEnglishTranslation']);
         //package add
         Route::post('packages', [PackageController::class,'store']);
         //package update
         Route::put('/packages/{id}', [PackageController::class,'updatePackage']);
         //package delete
         Route::delete('/packages/{id}', [PackageController::class,'deletePackage']);
+        //appointment delete
+        Route::delete('/Appointment/{id}', [AppointmentController::class,'deleteAppointment']);
     });
 
 });
@@ -77,14 +83,16 @@ Route::prefix('v1')->group(function() {
     Route::middleware('auth:sanctum')->post('/profile', [CustomerController::class,'store']);
     //appointment create
     Route::middleware('auth:sanctum')->post('/appointment',[AppointmentController::class,'createAppointments']);
+    Route::get('appointments',[AppointmentController::class,'getAppointments']);
+
     //customers buy package
     Route::middleware('auth:sanctum')->post('/customer/addPackage', [CustomerController::class,'addPackage']);
 });
 Route::prefix('v1')->group(function () {
     //package list
-    Route::get('packages', [PackageController::class, 'index']);
+    //Route::get('packages', [PackageController::class, 'index']);
+    Route::get('packages', [PackageController::class,'getPackages']);
     //trainer search
     Route::get('trainers/search', [TrainerController::class, 'searchTrainer']);
 
 });
-

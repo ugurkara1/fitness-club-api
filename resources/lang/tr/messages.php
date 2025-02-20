@@ -16,6 +16,10 @@ return [
     'email_sent' => 'E-posta başarıyla gönderildi.',
     'email_failed' => 'E-posta gönderimi başarısız oldu.',
     'appointment_creation_failed' => 'Randevu oluşturulurken bir hata oluştu.',
+    'no_appointments_found'       => 'Hiç randevu bulunamadı.',
+    'appointment_fetch_failed'    => 'Randevular getirilirken hata oluştu.',
+    'appointment_deleted'         => 'Randevu başarıyla silindi.',
+    'appointment_delete_failed'   => 'Randevu silinirken hata oluştu.',
     'role_not_found' => 'Rol bulunamadı.',
     'admin_registered' => 'Admin kullanıcı kaydedildi. Giriş yapmak için OTP kullanın.',
     'user_registered' => 'Kullanıcı başarıyla kaydedildi.',
@@ -51,5 +55,10 @@ return [
     'trainer_created' => 'Eğitmen başarıyla oluşturuldu.',
     'trainer_deleted' => 'Eğitmen başarıyla silindi.',
     'no_trainer_found' => 'Hiçbir eğitmen bulunamadı.',
+    'facility_deleted'      => 'Facility deleted successfully.',
+    'translation_updated' => 'Çeviri başarıyla güncellendi.',
+    'server_error' => 'Sunucu hatası oluştu, lütfen daha sonra tekrar deneyin.',
+
+
 
 ];

@@ -34,6 +34,69 @@ class PackageController extends Controller
         ],200);
     }
 
+    public function getPackages(Request $request){
+        try{
+            Log::info('getPackages fonksiyonu çalıştırıldı.');
+            //eğer kullanıcı kimlik doğrulaması yapılmışsa
+            $user=Auth::user();
+            if($user){
+                $packages=Package::with(['sports','trainers','facilities'])
+                    ->where('user_id',$user->id)
+                    ->get();
+
+            }else{
+                $packages=Package::with(['sports','trainers','facilities'])->get();
+                $locale=app()->getLocale();
+            }
+            //eğer paket bulunmuyorsa
+            if($packages->isEmpty()){
+                return response()->json([
+                    'message'=> __('messages.no_appointments'),
+                ],404);
+            }
+            $packages=$packages->map(function($package) use ($locale){
+                return[
+                    'id'=>$package->id,
+                    'type'        => $package->type, // Dil desteği ekleniyor
+                    'created_at'=>$package->created_at,
+                    'updated_at'=>$package->updated_at,
+                    'sports'=>$package->sports->map(function($sport) use ($locale){
+                        return[
+                            'id'          => $sport->id,
+                            'name'        => $sport->getTranslatedName($locale), // Dil desteği ekleniyor
+                            'description' => $sport->getTranslatedDescription($locale), // Dil desteği ekleniyor
+                        ];
+                    }),
+                    'facilities'  => $package->facilities->map(function ($facility) use ($locale) {
+                        return [
+                            'id'          => $facility->id,
+                            'name'        => $facility->getTranslatedName($locale), // Dil desteği ekleniyor
+                            'description' => $facility->getTranslatedDescription($locale), // Dil desteği ekleniyor
+                        ];
+                    }),
+                    'trainers'=>$package->trainers->map(function($trainers) use ($locale){
+                        return [
+                            'id'=> $trainers->id,
+                            'name'=> $trainers->getTranslatedName($locale),
+                            'description'=> $trainers->getTranslatedDescription($locale),
+                        ];
+                    }),
+                ];
+            });
+            return response()->json([
+                'message'  => __('messages.packages_retrieved'),
+                'packages' => $packages
+            ], 200);
+
+        }catch (\Exception $e) {
+            // Hata durumunda loglanır ve hata mesajı döndürülür
+            Log::error("getPackages fonksiyonunda hata oluştu: " . $e->getMessage());
+            return response()->json([
+                'message' => __('messages.package_fetch_failed'),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
     //package add
     public function store(Request $request)
     {
@@ -128,6 +191,61 @@ class PackageController extends Controller
                 'message' => __('messages.package_deleted')
             ], 200);
     }
+    //delete methoduna dil desteği eklenmiş hali
+    /*
+    public function deletePackage(Request $request,$id){
+        if(!Auth::check() || Auth::user()->role_id!==1){
+            return response()->json([
+                'message'=> __('messages.unauthorized'),
+            ] ,403);
+        }
+        $package=Package::where('id',$id)->first();
+        if(!$package){
+            return response()->json([
+                'message'=> __('messages.package_not_found'),
+            ] ,404);
+        }
+        $locale=$request->query('lang');
+        if(!$locale || $locale=='tr'){
+            $name=$package->name;
+            $description=$package->description;
+        }elseif($locale==='en'){
+            $translation=$package->translations()->where('locale','en')->first();
+            if($translation){
+                $name=$translation->name;
+                $description=$translation->description;
+            }else{
+                $name=$package->name;
+                $description=$package->description;
+            }
+        }else{
+            $name=$package->name;
+            $description=$package->description;
+        }
+        $packageData=[
+            'id'=> $package->id,
+            'name'=> $name,
+            'description'=> $description,
+        ];
+        //ilişkili verileri kaldırıyoruz
+        $package->sports()->detach();
+        $package->facilities()->detach();
+        $package->trainers()->detach();
+
+        //paket silme işlemi
+        $package->delete();
+
+        $functionName=__FUNCTION__;
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($package)
+            ->withProperties(['attributes' => $packageData])
+            ->log("Function Name: $functionName. Package deleted successfully.");
+
+        return response()->json([
+            'message' => __('messages.package_deleted')
+        ], 200);
+    }*/
     //paket güncelleme
     public function updatePackage(Request $request, $id){
 
@@ -183,4 +301,5 @@ class PackageController extends Controller
             'package' => $package->load('sports', 'facilities', 'trainers')
         ], 200);
     }
+
 }
